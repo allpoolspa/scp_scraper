@@ -28,7 +28,6 @@ class ScpScrapperItem(Item):
     availability = Field()
     supercedes = Field()
     supercedes_date = Field()
-    img_lrg = Field()
     branches = Field()
     image_urls = Field()
     images = Field()

@@ -42,7 +42,5 @@ class ScpScrapperImagePipeline(ImagesPipeline):
 
     def get_media_requests(self, item, info):
         for image_url in item['image_urls']:
+            print(image_url)
             yield scrapy.Request(image_url, meta=item)
-        for part in item['parts']:
-            for image_url in part['image_urls']:
-                yield scrapy.Request(image_url, meta=part)

@@ -31,10 +31,10 @@ from selenium.webdriver.support import expected_conditions as EC
 
 class LoginSpider(CrawlSpider):
 
-    MANUFACTURER = 'ABCO'
+    MANUFACTURER = 'A&B Brush'
     name = 'scp'
     #aladdin
-    start_urls=['https://pool360.poolcorp.com/search.aspx?searchterm=%23all&r=%2bTop%2fmanufacturers%2fabco+distributors']
+    start_urls=['https://pool360.poolcorp.com/search.aspx?searchterm=%23all&r=%2bTop%2fmanufacturers%2fa%26b+brush+manufacturing+corp']
     #start_urls = ['https://pool360.poolcorp.com/Products/SearchResults/tabid/89/language/en-US/Default.aspx?q=%23all&r=%2bTop%2fmanufacturers%2fhayward+pool+products']
     login_page = 'https://pool360.poolcorp.com/signin.aspx'
     rules = (
@@ -110,6 +110,7 @@ class LoginSpider(CrawlSpider):
         """
         hxs = Selector(response)
         item = ScpScrapperItem()
+        self.driver.get(response.url)
         #Get the fields we need
         try:
             item['price'] = hxs.xpath('//span[@class="priceValue"]/text()').extract()[0]
@@ -155,7 +156,9 @@ class LoginSpider(CrawlSpider):
             except KeyError:
                 self.log.info('Unable to find {}'.format(info))
 
-        item['image_urls'] = self.safe_get_info("//a[@id='productlb']", "href")
+        item['image_urls'] = [
+            self.safe_get_info(".//a[@id='productlb']", "href")
+        ]
         item['branches'] = self._get_availability(response)
         manufacturer = item.get('manufacturer', self.MANUFACTURER)
         item['sku'] = self.make_sku(
@@ -180,7 +183,7 @@ class LoginSpider(CrawlSpider):
         to get the fields. We grab the branches and availability quantity
         at each branch.
         """
-        self.driver.get(response.url)
+
         time.sleep(2.5)
         try:
             branch_quantity = self.driver.find_elements_by_xpath('//table[@class="productAvailData"]//tr')
@@ -194,26 +197,23 @@ class LoginSpider(CrawlSpider):
                 branches_dict[branch] = quantity
         return branches_dict
 
-    def safe_get_info(self, xpath, attribute, root=None):
-        self.driver.implicitly_wait(1)
+    def safe_get_info(self, xpath, attribute):
         try:
-            if root:
-                return str(
-                    root.find_element_by_xpath(xpath).get_attribute(attribute)
-                )
-            return str(
+            img = str(
                 self.driver.find_element_by_xpath(
                     xpath
                 ).get_attribute(attribute)
             )
+            print(img)
+            return img
         except:
-            self.log.info(
+            print(
                 "Can't get {} with xpath {} ".format(attribute, xpath)
             )
-            return None
+        return None
 
     def get_manufacturer(self, manufacturer):
-        chars_to_remove = ['.','-',' ']
+        chars_to_remove = ['.','-',' ', '&']
         manufacturers = {
             'oreq' : 'Oreq',
             'aquachek' : 'Aquachek',
@@ -233,7 +233,8 @@ class LoginSpider(CrawlSpider):
             "raypak" : "Raypak",
             "polaris" : "Polaris",
             "jandy" : "Jandy",
-            "custommoldedproducts": "Custom Molded Products"
+            "custommoldedproducts": "Custom Molded Products",
+            "abbrush": "A&B Brush"
         }
         clean_manufacturer = manufacturer.translate(
             None, ''.join(chars_to_remove)
